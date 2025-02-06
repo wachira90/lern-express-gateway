@@ -1,0 +1,97 @@
+http:
+  port: 8080
+  host: 0.0.0.0
+
+admin:
+  port: 9876
+  host: 127.0.0.1
+
+apiEndpoints:
+  siteA:
+    host: sitea.127-1-1-1.nip.io
+    paths: ["/"]
+    # paths: ["/api/*"]
+
+  siteB:
+    host: siteb.127-1-1-1.nip.io
+    paths: ["/api/*"]
+
+  siteC:
+    host: sitec.127-1-1-1.nip.io
+    paths: ["/api/*"]
+
+serviceEndpoints:
+  backendA:
+    url: "https://jsonplaceholder.typicode.com/todos"
+
+  backendB:
+    url: "http://192.168.1.110:8080"
+
+  backendC:
+    url: "http://192.168.1.110"
+
+policies:
+  - proxy
+  - cors
+  - log
+  # - basic-auth
+  # - expression
+  # - key-auth
+  # - oauth2
+  - rate-limit
+
+pipelines:
+  siteA_pipeline:
+    apiEndpoints:
+      - siteA
+    policies:
+      - log: # policy name
+          - action:    # array of condition/actions objects
+              message: ${req.method} ${[req]} ${req.hostname} ${req.originalUrl}  # parameter for log action
+
+      - cors:
+          - action:
+              origin: "*"
+              methods:
+                - GET
+                - POST
+                - OPTIONS
+              allowedHeaders:
+                - Content-Type
+                - Authorization
+
+      - rate-limit:
+          - action:
+              # Limit to 1 per 10 seconds based on the hostname
+              max: 4
+              windowMs: 1000
+              rateLimitBy: "${req.hostname}"
+          # - action:
+          #     max: 8  # Allow only 8 requests
+          #     window: 1000  # Time window in milliseconds (1 second)
+          #     key: ip  # Rate limit based on IP address
+          #     remainingAttempts: true
+          #     rejectWithHTTPCode: 429  # Return 429 Too Many Requests when limit is exceeded
+
+      - proxy:
+          - action:
+              serviceEndpoint: backendA
+              changeOrigin: true
+
+  siteB_pipeline:
+    apiEndpoints:
+      - siteB
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: backendB
+              changeOrigin: true
+
+  siteC_pipeline:
+    apiEndpoints:
+      - siteC
+    policies:
+      - proxy:
+          - action:
+              serviceEndpoint: backendC
+              changeOrigin: true
