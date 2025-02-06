@@ -17,35 +17,56 @@ admin:
 
 apiEndpoints:
   siteA:
-    host: siteA.com
-    paths: ["/api/*"]
+    host: sitea.127-1-1-1.nip.io
+    paths: ["/*"]
+    # paths: ["/api/*"]
 
   siteB:
-    host: siteB.com
+    host: siteb.127-1-1-1.nip.io
     paths: ["/api/*"]
 
   siteC:
-    host: siteC.com
+    host: sitec.127-1-1-1.nip.io
     paths: ["/api/*"]
 
 serviceEndpoints:
   backendA:
-    url: "http://192.168.1.100:3000"
+    url: "https://jsonplaceholder.typicode.com/todos"
 
   backendB:
-    url: "http://192.168.1.101:4000"
+    url: "http://192.168.1.110:8080"
 
   backendC:
-    url: "http://192.168.1.102:5000"
+    url: "http://192.168.1.110"
 
 policies:
   - proxy
+  - cors
+  - log
+  # - basic-auth
+  # - expression
+  # - key-auth
+  # - oauth2
+  - rate-limit
 
 pipelines:
   siteA_pipeline:
     apiEndpoints:
       - siteA
     policies:
+      - rate-limit:
+          - action:
+              # Limit to 1 per 10 seconds based on the hostname
+              max: 4
+              windowMs: 1000
+              rateLimitBy: "${req.hostname}"
+          # - action:
+          #     max: 8  # Allow only 8 requests
+          #     window: 1000  # Time window in milliseconds (1 second)
+          #     key: ip  # Rate limit based on IP address
+          #     remainingAttempts: true
+          #     rejectWithHTTPCode: 429  # Return 429 Too Many Requests when limit is exceeded
+
       - proxy:
           - action:
               serviceEndpoint: backendA
@@ -68,6 +89,7 @@ pipelines:
           - action:
               serviceEndpoint: backendC
               changeOrigin: true
+
 ```
 
 ---
