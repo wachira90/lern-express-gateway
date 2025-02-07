@@ -2,6 +2,20 @@ http:
   port: 8080
   host: 0.0.0.0
 
+# https:
+#   port: 9443
+#   hostname: localhost
+#   tls:
+#     "*.demo.io":
+#         key: example/keys/demo.io.key.pem
+#         cert: example/keys/demo.io.cert.pem
+#     "api.acme.com":
+#         key: example/keys/acme.com.key.pem
+#         cert: example/keys/acme.com.cert.pem
+#     "default":
+#         key: example/keys/eg.io.key.pem
+#         cert: example/keys/eg.io.cert.pem
+
 admin:
   port: 9876
   host: 127.0.0.1
